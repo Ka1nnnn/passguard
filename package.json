@@ -1,0 +1,17 @@
+{
+  "name": "passguard",
+  "version": "1.0.0",
+  "description": "Privacy-friendly password strength & breach checker (k-anonymity). Static site, no backend.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "security",
+    "password",
+    "haveibeenpwned",
+    "k-anonymity",
+    "entropy"
+  ],
+  "license": "MIT"
+}
