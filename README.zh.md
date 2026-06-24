@@ -11,6 +11,8 @@
 
 ### 🔗 [在线演示](https://Ka1nnnn.github.io/passguard/)
 
+<p align="center"><img src="docs/screenshot.png" alt="PassGuard 截图" width="380"></p>
+
 ---
 
 ## ✨ 功能
@@ -18,6 +20,7 @@
 - **实时强度指示器** —— 以比特表示的熵、字符集大小，以及预估的暴力破解时间。
 - **基于 k-匿名的泄露检测** —— 使用 [Have I Been Pwned](https://haveibeenpwned.com/API/v3#PwnedPasswords) Pwned Passwords API。
 - **真正的隐私保护** —— 密码在本地哈希，只有 SHA-1 哈希的前 5 个字符会离开浏览器。
+- **内置密码生成器** —— 使用密码学安全的随机数生成器创建 20 位高强度密码。
 - **多语言界面** —— 英语、俄语和中文，可即时切换。
 - **零依赖** —— 纯 HTML/CSS/JS，无需构建，无后端，免费静态托管。
 - **已测试** —— 纯逻辑由单元测试和 CI 覆盖。
@@ -60,6 +63,7 @@ passguard/
 ├── src/
 │   ├── strength.js     # 熵、评分、破解时间（纯逻辑，已测试）
 │   ├── hibp.js         # SHA-1 + k-匿名泄露查询
+│   ├── generate.js     # 基于 CSPRNG 的密码生成器（纯逻辑，已测试）
 │   ├── i18n.js         # EN/RU/ZH 字符串 + 本地化格式
 │   └── app.js          # DOM 绑定
 ├── test/

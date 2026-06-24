@@ -5,11 +5,13 @@
 
 import { analyze } from './strength.js';
 import { pwnedCount } from './hibp.js';
+import { generatePassword } from './generate.js';
 import { LANGS, LANG_NAMES, STRINGS, formatCrackTime } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const input = $('password');
 const toggle = $('toggle');
+const generate = $('generate');
 const meterFill = $('meter-fill');
 const label = $('label');
 const stats = $('stats');
@@ -39,6 +41,8 @@ function applyStaticText() {
   $('privacy-text').textContent = s.privacy;
   input.placeholder = s.placeholder;
   toggle.textContent = input.type === 'password' ? s.show : s.hide;
+  generate.textContent = s.generate;
+  generate.title = s.generateHint;
   $('how-summary').textContent = s.howSummary;
   $('how-body').textContent = s.howBody;
   $('source-link').textContent = s.source;
@@ -146,6 +150,16 @@ toggle.addEventListener('click', () => {
   input.type = isHidden ? 'text' : 'password';
   toggle.textContent = isHidden ? t().hide : t().show;
   toggle.setAttribute('aria-pressed', String(isHidden));
+});
+
+generate.addEventListener('click', () => {
+  input.value = generatePassword(20);
+  // Reveal it so the user can copy what was generated.
+  input.type = 'text';
+  toggle.textContent = t().hide;
+  toggle.setAttribute('aria-pressed', 'true');
+  // Reuse the normal input path (strength render + debounced breach check).
+  input.dispatchEvent(new Event('input'));
 });
 
 // --- boot ---

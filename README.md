@@ -11,6 +11,8 @@ A privacy-friendly **password strength & breach checker** that runs entirely in 
 
 ### 🔗 [Live demo](https://Ka1nnnn.github.io/passguard/)
 
+<p align="center"><img src="docs/screenshot.png" alt="PassGuard screenshot" width="380"></p>
+
 ---
 
 ## ✨ Features
@@ -18,6 +20,7 @@ A privacy-friendly **password strength & breach checker** that runs entirely in 
 - **Real-time strength meter** — entropy in bits, character-set size, and an estimated brute-force time.
 - **Breach check via k-anonymity** — uses the [Have I Been Pwned](https://haveibeenpwned.com/API/v3#PwnedPasswords) Pwned Passwords API.
 - **Truly private** — the password is hashed locally; only the first 5 characters of the SHA-1 hash leave the browser.
+- **Built-in password generator** — creates strong 20-character passwords with a cryptographically secure RNG.
 - **Multilingual UI** — English, Russian and Chinese, switchable at runtime.
 - **Zero dependencies** — plain HTML/CSS/JS, no build step, no backend, free static hosting.
 - **Tested** — pure logic is covered by unit tests and CI.
@@ -60,6 +63,7 @@ passguard/
 ├── src/
 │   ├── strength.js     # entropy, scoring, crack-time (pure, tested)
 │   ├── hibp.js         # SHA-1 + k-anonymity breach lookup
+│   ├── generate.js     # CSPRNG password generator (pure, tested)
 │   ├── i18n.js         # EN/RU/ZH strings + localized formatting
 │   └── app.js          # DOM wiring
 ├── test/

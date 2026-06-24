@@ -119,6 +119,21 @@ h1 {
   background: #272c35;
 }
 
+#generate {
+  padding: 0 14px;
+  white-space: nowrap;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+#generate:hover {
+  filter: brightness(1.08);
+}
+
 .meter {
   height: 8px;
   background: #0e0f12;
