@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { generatePassword } from '../src/generate.js';
+import { generatePassword, generateMany } from '../src/generate.js';
 
 test('generates a password of the requested length', () => {
   assert.equal(generatePassword(20).length, 20);
@@ -46,4 +46,28 @@ test('is deterministic given a fixed RNG (no modulo-bias crash)', () => {
 
 test('two generated passwords differ', () => {
   assert.notEqual(generatePassword(20), generatePassword(20));
+});
+
+test('suffix ends with an uppercase letter and a separator', () => {
+  for (let i = 0; i < 30; i++) {
+    const pw = generatePassword(16, { suffix: true });
+    assert.equal(pw.length, 16);
+    assert.match(pw.slice(-1), /[-_]/, 'ends with - or _');
+    assert.match(pw.slice(-2, -1), /[A-Z]/, 'capital before separator');
+  }
+});
+
+test('lowercase-only body with suffix (the "abc...X-" pattern)', () => {
+  const pw = generatePassword(14, {
+    lower: true, upper: false, digits: false, symbols: false, suffix: true,
+  });
+  const body = pw.slice(0, -2);
+  assert.match(body, /^[a-z]+$/, 'body is all lowercase');
+  assert.match(pw.slice(-2), /^[A-Z][-_]$/, 'ends with Capital + separator');
+});
+
+test('generateMany returns the requested count of distinct strings', () => {
+  const list = generateMany(50, 20);
+  assert.equal(list.length, 50);
+  assert.equal(new Set(list).size, 50);
 });

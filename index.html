@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PassGuard — Password Strength & Breach Checker</title>
+    <title>PassGuard — Password Strength, Generator & Breach Checker</title>
     <meta
       name="description"
-      content="Check password strength and whether it has appeared in a data breach — privately, using k-anonymity. Nothing leaves your browser."
+      content="Check password strength, generate strong passwords, and check passwords or emails against data breaches — privately. Nothing sensitive leaves your browser for passwords (k-anonymity)."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -23,34 +23,106 @@
         </p>
       </header>
 
-      <div class="field">
-        <input
-          id="password"
-          type="password"
-          autocomplete="off"
-          autocapitalize="off"
-          spellcheck="false"
-          aria-label="Password to test"
-        />
-        <button id="toggle" type="button" aria-pressed="false">Show</button>
-        <button id="generate" type="button"></button>
-      </div>
+      <nav id="tabs" class="tabs" role="tablist">
+        <button class="tab active" id="tab-check" data-tab="check" role="tab"></button>
+        <button class="tab" id="tab-generate" data-tab="generate" role="tab"></button>
+        <button class="tab" id="tab-email" data-tab="email" role="tab"></button>
+      </nav>
 
-      <div class="meter" role="progressbar" aria-label="Password strength">
-        <div id="meter-fill" class="meter-fill"></div>
-      </div>
-      <p id="label" class="label"></p>
+      <!-- ============ CHECK ============ -->
+      <section class="panel" id="panel-check" role="tabpanel">
+        <div class="field">
+          <input
+            id="password"
+            type="password"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-label="Password to test"
+          />
+          <button id="toggle" type="button" aria-pressed="false">Show</button>
+        </div>
 
-      <div id="stats" class="stats"></div>
+        <div class="meter" role="progressbar" aria-label="Password strength">
+          <div id="meter-fill" class="meter-fill"></div>
+        </div>
+        <p id="label" class="label"></p>
 
-      <ul id="warnings" class="warnings"></ul>
+        <div id="stats" class="stats"></div>
+        <ul id="warnings" class="warnings"></ul>
+        <p id="breach" class="breach idle"></p>
 
-      <p id="breach" class="breach idle"></p>
+        <details class="how">
+          <summary id="how-summary"></summary>
+          <p id="how-body"></p>
+        </details>
+      </section>
 
-      <details class="how">
-        <summary id="how-summary"></summary>
-        <p id="how-body"></p>
-      </details>
+      <!-- ============ GENERATE ============ -->
+      <section class="panel hidden" id="panel-generate" role="tabpanel">
+        <div class="field">
+          <input id="gen-pass" type="text" readonly aria-label="Generated password" />
+          <button id="gen-copy" type="button"></button>
+        </div>
+
+        <div class="meter">
+          <div id="gen-meter-fill" class="meter-fill"></div>
+        </div>
+        <p id="gen-label" class="label"></p>
+        <div id="gen-stats" class="stats"></div>
+        <p id="gen-breach" class="breach idle"></p>
+
+        <div class="control">
+          <div class="control-head">
+            <span id="lbl-length"></span><span id="val-length" class="val"></span>
+          </div>
+          <input id="opt-length" class="range" type="range" min="6" max="64" value="20" />
+        </div>
+
+        <div class="toggles">
+          <label class="chk"><input type="checkbox" id="opt-lower" checked /><span id="lbl-lower"></span></label>
+          <label class="chk"><input type="checkbox" id="opt-upper" checked /><span id="lbl-upper"></span></label>
+          <label class="chk"><input type="checkbox" id="opt-digits" checked /><span id="lbl-digits"></span></label>
+          <label class="chk"><input type="checkbox" id="opt-symbols" checked /><span id="lbl-symbols"></span></label>
+          <label class="chk wide"><input type="checkbox" id="opt-suffix" /><span id="lbl-suffix"></span></label>
+        </div>
+
+        <button id="gen-btn" class="primary" type="button"></button>
+
+        <hr class="sep" />
+
+        <h3 id="bulk-title" class="bulk-title"></h3>
+        <div class="control">
+          <div class="control-head">
+            <span id="lbl-count"></span><span id="val-count" class="val"></span>
+          </div>
+          <input id="opt-count" class="range" type="range" min="1" max="200" value="5" />
+        </div>
+        <div class="field">
+          <button id="dl-txt" type="button"></button>
+          <button id="dl-md" type="button"></button>
+        </div>
+        <p id="bulk-note" class="note"></p>
+      </section>
+
+      <!-- ============ EMAIL ============ -->
+      <section class="panel hidden" id="panel-email" role="tabpanel">
+        <div class="field">
+          <input
+            id="email"
+            type="email"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-label="Email to check"
+          />
+          <button id="email-btn" class="primary" type="button"></button>
+        </div>
+        <p id="email-status" class="breach idle"></p>
+        <div id="email-risk" class="risk hidden"></div>
+        <div id="email-results" class="results"></div>
+        <p id="email-note" class="note"></p>
+      </section>
 
       <footer>
         <a id="source-link" href="https://github.com/Ka1nnnn/passguard" target="_blank" rel="noopener"></a>
