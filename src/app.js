@@ -1,5 +1,5 @@
-// UI wiring for the three tabs (Check / Generate / Email). All heavy logic
-// lives in the sibling modules; this file only touches the DOM.
+// Wires up the three tabs (Check / Generate / Email). Logic lives in the other
+// modules; this file only reads inputs and updates the DOM.
 
 import { analyze } from './strength.js';
 import { pwnedCount } from './hibp.js';
@@ -10,24 +10,52 @@ import { LANGS, LANG_NAMES, STRINGS, formatCrackTime } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const SCORE_COLORS = ['#e5484d', '#f76808', '#ffb224', '#46a758', '#30a46c'];
+const LANG_KEY = 'pg-lang';
+const THEME_KEY = 'pg-theme';
 
-// Element groups reused by the shared strength renderer.
+// localStorage is not always available (private mode, Node smoke test).
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { /* ignore */ } },
+};
+
 const checkEls = { fill: $('meter-fill'), label: $('label'), stats: $('stats'), warnings: $('warnings') };
 const genEls = { fill: $('gen-meter-fill'), label: $('gen-label'), stats: $('gen-stats'), warnings: null };
 
-let lang = LANGS.includes((navigator.language || 'en').slice(0, 2))
-  ? navigator.language.slice(0, 2)
-  : 'en';
+let lang = store.get(LANG_KEY)
+  || (LANGS.includes((navigator.language || 'en').slice(0, 2)) ? navigator.language.slice(0, 2) : 'en');
 
-// Per-panel breach state so a language switch can re-render the latest result.
 let lastBreach = { state: 'idle', count: 0 };
 let lastGenBreach = { state: 'idle', count: 0 };
 let emailState = { phase: 'idle', report: null };
 
 const t = () => STRINGS[lang];
 const localeFor = (l) => (l === 'ru' ? 'ru-RU' : l === 'zh' ? 'zh-CN' : 'en-US');
+const noClass = (o) => !o.lower && !o.upper && !o.digits && !o.symbols && !o.suffix;
 
-// ------------------------------------------------------------------ static text
+// ---------- theme ----------
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  $('theme-toggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+function currentTheme() {
+  return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+}
+function initTheme() {
+  let theme = store.get(THEME_KEY);
+  if (!theme) {
+    const prefersLight = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: light)').matches;
+    theme = prefersLight ? 'light' : 'dark';
+  }
+  applyTheme(theme);
+}
+$('theme-toggle').addEventListener('click', () => {
+  const next = currentTheme() === 'light' ? 'dark' : 'light';
+  applyTheme(next);
+  store.set(THEME_KEY, next);
+});
+
+// ---------- static text ----------
 function applyStaticText() {
   const s = t();
   document.documentElement.lang = lang;
@@ -39,14 +67,12 @@ function applyStaticText() {
   $('tab-generate').textContent = s.tabGenerate;
   $('tab-email').textContent = s.tabEmail;
 
-  // Check
   $('password').placeholder = s.placeholder;
   $('toggle').textContent = $('password').type === 'password' ? s.show : s.hide;
   $('how-summary').textContent = s.howSummary;
   $('how-body').textContent = s.howBody;
   $('source-link').textContent = s.source;
 
-  // Generate
   $('gen-copy').textContent = s.copy;
   $('lbl-length').textContent = s.optLength;
   $('lbl-lower').textContent = s.optLower;
@@ -59,17 +85,17 @@ function applyStaticText() {
   $('lbl-count').textContent = s.optCount;
   $('dl-txt').textContent = s.dlTxt;
   $('dl-md').textContent = s.dlMd;
+  $('copy-all').textContent = s.copyAll;
   $('bulk-note').textContent = s.bulkNote;
   $('val-length').textContent = $('opt-length').value;
   $('val-count').textContent = $('opt-count').value;
 
-  // Email
   $('email').placeholder = s.emailPlaceholder;
   $('email-btn').textContent = s.emailButton;
   $('email-note').textContent = s.emailNote;
 }
 
-// ------------------------------------------------------------------ shared render
+// ---------- shared render ----------
 function renderStrength(els, result, s) {
   els.fill.style.width = `${(result.score + 1) * 20}%`;
   els.fill.style.background = SCORE_COLORS[result.score];
@@ -113,7 +139,23 @@ function renderBreachEl(el, rec, s) {
   else el.textContent = '';
 }
 
-// ------------------------------------------------------------------ CHECK tab
+// Breach lookup shared by the Check and Generate panels.
+async function runBreach(value, sourceInput, el, store) {
+  try {
+    const count = await pwnedCount(value);
+    if (sourceInput.value !== value) return; // user kept typing
+    const rec = { state: count > 0 ? 'pwned' : 'safe', count };
+    store(rec);
+    renderBreachEl(el, rec, t());
+  } catch (err) {
+    const rec = { state: 'error', count: 0 };
+    store(rec);
+    renderBreachEl(el, rec, t());
+    console.error(err);
+  }
+}
+
+// ---------- check tab ----------
 let breachTimer = null;
 $('password').addEventListener('input', () => {
   const value = $('password').value;
@@ -137,23 +179,7 @@ $('toggle').addEventListener('click', () => {
   $('toggle').setAttribute('aria-pressed', String(isHidden));
 });
 
-// Shared breach lookup used by both the Check and Generate panels.
-async function runBreach(value, sourceInput, el, store) {
-  try {
-    const count = await pwnedCount(value);
-    if (sourceInput.value !== value) return; // stale
-    const rec = { state: count > 0 ? 'pwned' : 'safe', count };
-    store(rec);
-    renderBreachEl(el, rec, t());
-  } catch (err) {
-    const rec = { state: 'error', count: 0 };
-    store(rec);
-    renderBreachEl(el, rec, t());
-    console.error(err);
-  }
-}
-
-// ------------------------------------------------------------------ GENERATE tab
+// ---------- generate tab ----------
 function readGenOptions() {
   return {
     length: Number($('opt-length').value),
@@ -169,9 +195,8 @@ let genBreachTimer = null;
 function regenerate() {
   const s = t();
   const opts = readGenOptions();
-  const noClass = !opts.lower && !opts.upper && !opts.digits && !opts.symbols && !opts.suffix;
 
-  if (noClass) {
+  if (noClass(opts)) {
     $('gen-pass').value = '';
     renderStrength(genEls, analyze(''), s);
     lastGenBreach = { state: 'needclass', count: 0 };
@@ -204,30 +229,37 @@ for (const id of ['opt-lower', 'opt-upper', 'opt-digits', 'opt-symbols', 'opt-su
 }
 $('gen-btn').addEventListener('click', regenerate);
 
-$('gen-copy').addEventListener('click', async () => {
-  const v = $('gen-pass').value;
-  if (!v) return;
+async function copyText(value, button, doneLabel, idleLabel) {
+  if (!value) return;
   try {
-    await navigator.clipboard.writeText(v);
-    $('gen-copy').textContent = t().copied;
-    setTimeout(() => ($('gen-copy').textContent = t().copy), 1200);
+    await navigator.clipboard.writeText(value);
+    button.textContent = doneLabel;
+    setTimeout(() => (button.textContent = idleLabel), 1200);
   } catch (err) {
     console.error(err);
   }
+}
+
+$('gen-copy').addEventListener('click', () =>
+  copyText($('gen-pass').value, $('gen-copy'), t().copied, t().copy));
+
+$('copy-all').addEventListener('click', () => {
+  const opts = readGenOptions();
+  if (noClass(opts)) return;
+  const list = generateMany(Number($('opt-count').value), opts.length, opts);
+  copyText(list.join('\n'), $('copy-all'), t().copiedAll, t().copyAll);
 });
 
 function download(format) {
   const opts = readGenOptions();
-  if (!opts.lower && !opts.upper && !opts.digits && !opts.symbols && !opts.suffix) return;
-  const count = Number($('opt-count').value);
-  const list = generateMany(count, opts.length, opts);
-  const content = buildFileContent(list, format, new Date().toISOString());
-  downloadFile(`passguard-passwords.${format}`, content);
+  if (noClass(opts)) return;
+  const list = generateMany(Number($('opt-count').value), opts.length, opts);
+  downloadFile(`passguard-passwords.${format}`, buildFileContent(list, format, new Date().toISOString()));
 }
 $('dl-txt').addEventListener('click', () => download('txt'));
 $('dl-md').addEventListener('click', () => download('md'));
 
-// ------------------------------------------------------------------ EMAIL tab
+// ---------- email tab ----------
 async function runEmailCheck() {
   const email = $('email').value.trim();
   if (!isValidEmail(email)) {
@@ -238,8 +270,7 @@ async function runEmailCheck() {
   emailState = { phase: 'checking', report: null };
   renderEmail();
   try {
-    const report = await checkEmail(email);
-    emailState = { phase: 'done', report };
+    emailState = { phase: 'done', report: await checkEmail(email) };
   } catch (err) {
     emailState = { phase: 'error', report: null };
     console.error(err);
@@ -348,7 +379,7 @@ $('email').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') runEmailCheck();
 });
 
-// ------------------------------------------------------------------ tabs
+// ---------- tabs ----------
 function switchTab(name) {
   for (const tab of $('tabs').children) {
     tab.classList.toggle('active', tab.dataset.tab === name);
@@ -362,7 +393,7 @@ for (const tab of $('tabs').children) {
   tab.addEventListener('click', () => switchTab(tab.dataset.tab));
 }
 
-// ------------------------------------------------------------------ language
+// ---------- language ----------
 function buildLangBar() {
   for (const code of LANGS) {
     const btn = document.createElement('button');
@@ -376,6 +407,7 @@ function buildLangBar() {
 
 function setLang(code) {
   lang = code;
+  store.set(LANG_KEY, code);
   for (const btn of $('langs').children) {
     btn.classList.toggle('active', btn.dataset.lang === code);
   }
@@ -390,6 +422,7 @@ function setLang(code) {
   renderEmail();
 }
 
-// ------------------------------------------------------------------ boot
+// ---------- boot ----------
+initTheme();
 buildLangBar();
 setLang(lang);

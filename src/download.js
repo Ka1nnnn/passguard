@@ -11,7 +11,7 @@
  */
 export function buildFileContent(passwords, format, timestamp = '') {
   if (format === 'md') {
-    const header = ['# PassGuard — generated passwords', ''];
+    const header = ['# PassGuard - generated passwords', ''];
     if (timestamp) header.push(`_Generated: ${timestamp}_`, '');
     const body = passwords.map((p, i) => `${i + 1}. \`${p}\``);
     return [...header, ...body, ''].join('\n');

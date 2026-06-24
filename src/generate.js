@@ -34,7 +34,7 @@ function randomInt(max, randomBytes) {
  *
  * Guarantees at least one character from each enabled class, fills the rest
  * from the combined pool, then shuffles. With `suffix` enabled the password
- * ends with an uppercase letter followed by a `-` or `_` separator — combine
+ * ends with an uppercase letter followed by a `-` or `_` separator - combine
  * `suffix` with only `lower` enabled to get an "all-lowercase, capital + dash
  * at the end" password.
  *

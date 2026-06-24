@@ -1,6 +1,6 @@
 // Have I Been Pwned "Pwned Passwords" lookup using the k-anonymity model.
 //
-// We never send the password — not even its full hash. We compute the SHA-1
+// We never send the password - not even its full hash. We compute the SHA-1
 // hash locally, send only the first 5 hex characters of it, and the API
 // returns every breached hash that shares that prefix. We then look for the
 // remaining 35 characters in that list ourselves. The server therefore never

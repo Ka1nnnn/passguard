@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PassGuard — Password Strength, Generator & Breach Checker</title>
+    <title>PassGuard - Password Strength, Generator & Breach Checker</title>
     <meta
       name="description"
-      content="Check password strength, generate strong passwords, and check passwords or emails against data breaches — privately. Nothing sensitive leaves your browser for passwords (k-anonymity)."
+      content="Check password strength, generate strong passwords, and check passwords or emails against data breaches - privately. Nothing sensitive leaves your browser for passwords (k-anonymity)."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -15,7 +15,10 @@
       <header>
         <div class="topbar">
           <h1>🛡️ PassGuard</h1>
-          <div id="langs" class="langs" role="group" aria-label="Language"></div>
+          <div class="top-actions">
+            <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle theme">🌙</button>
+            <div id="langs" class="langs" role="group" aria-label="Language"></div>
+          </div>
         </div>
         <p class="tagline">
           <span id="tagline-text"></span>
@@ -102,6 +105,7 @@
           <button id="dl-txt" type="button"></button>
           <button id="dl-md" type="button"></button>
         </div>
+        <button id="copy-all" type="button"></button>
         <p id="bulk-note" class="note"></p>
       </section>
 
